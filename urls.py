@@ -28,6 +28,6 @@ urlpatterns = [
     path("table/", ListReadings.as_view()),
     path("accounts/login/", login_view, name="login"),
     path('json/', json_view, name="json"),
-    path('add/', CreateReading.as_view()),
-    path('', ChartView.as_view(), name="chart"),
+    path('chart/', ChartView.as_view(), name="chart"),
+    path('', CreateReading.as_view()),
 ]

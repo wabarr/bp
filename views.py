@@ -16,7 +16,7 @@ from django.utils.decorators import method_decorator
 class CreateReading(CreateView):
     model = Reading
     fields = ['systolic', 'diastolic', 'timestamp', 'AMPM']
-    success_url = '/add/'
+    success_url = '/'
     template_name = 'bp/create_reading.html'
 
 class ListReadings(ListView):
