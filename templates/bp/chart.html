@@ -1,0 +1,108 @@
+{% extends "bp/base.html" %}
+
+{% block content %}
+    <div class="row">
+    <div class="col">
+        <canvas id="bpchart">
+        </canvas>
+    </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    fetch('/json/')
+      .then(response => {
+        if (!response.ok) throw new Error('Network response was not ok');
+        return response.json();
+      })
+      .then(rawData => {
+        // 1. Sort chronologically (replace space with 'T' for cross-browser ISO date parsing)
+        const data = [...rawData].sort(
+          (a, b) => new Date(a.timestamp.replace(' ', 'T')) - new Date(b.timestamp.replace(' ', 'T'))
+        );
+
+        // 2. Extract unique YYYY-MM-DD dates for the x-axis
+        const getDate = (ts) => ts.split(' ')[0];
+        const labels = [...new Set(data.map(item => getDate(item.timestamp)))];
+
+        // 3. Map filtered readings into {x, y} coordinates so missing AM/PM entries stay aligned
+        const buildSeries = (period, metric) =>
+          data
+            .filter(item => item.AMPM === period)
+            .map(item => ({
+              x: getDate(item.timestamp),
+              y: item[metric]
+            }));
+
+        const ctx = document.getElementById('bpchart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'AM Systolic',
+                data: buildSeries('AM', 'systolic'),
+                borderColor: '#2563eb',      // Blue
+                backgroundColor: '#2563eb',
+                borderDash: [5, 5],
+                tension: 0.2,
+                spanGaps: true
+              },
+              {
+                label: 'PM Systolic',
+                data: buildSeries('PM', 'systolic'),
+                borderColor: '#2563eb',      // Red
+                backgroundColor: '#2563eb',
+                tension: 0.2,
+                spanGaps: true
+              },
+              {
+                label: 'AM Diastolic',
+                data: buildSeries('AM', 'diastolic'),
+                borderColor: '#940d0d',      // Teal
+                backgroundColor: '#940d0d',
+                borderDash: [5, 5],
+                tension: 0.2,
+                spanGaps: true
+              },
+              {
+                label: 'PM Diastolic',
+                data: buildSeries('PM', 'diastolic'),
+                borderColor: '#940d0d',      // Amber
+                backgroundColor: '#940d0d',
+                tension: 0.2,
+                spanGaps: true
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            interaction: {
+              mode: 'index',
+              intersect: false
+            },
+            scales: {
+              x: {
+                title: {
+                  display: true,
+                  text: 'Date'
+                }
+              },
+              y: {
+                title: {
+                  display: true,
+                  text: 'Blood Pressure (mmHg)'
+                },
+                beginAtZero: false
+              }
+            }
+          },
+
+        });
+      })
+      .catch(error => console.error('Error fetching chart JSON:', error));
+  });
+</script>
+{% endblock %}
