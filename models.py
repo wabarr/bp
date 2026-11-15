@@ -19,6 +19,14 @@ class Reading(models.Model):
             self.timestamp = local_dt + timedelta(hours=17)
         super().save(*args, **kwargs)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["timestamp", "AMPM"],
+                name="single_reading_per_interval_constraint",
+            )
+        ]
+
 class Annotations(models.Model):
     annotation = models.TextField()
     timestamp = models.DateTimeField(default=datetime.now)
