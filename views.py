@@ -11,20 +11,38 @@ from django.contrib.auth.forms import AuthenticationForm
 import json
 from django.http import HttpResponse
 from django import forms
-#note we need the method_decorator to use login_not_required decorator with class based views
-from django.utils.decorators import method_decorator
+from django.contrib.messages.views import SuccessMessageMixin
+from django.utils import formats
+from django.db import IntegrityError
 
-class CreateReading(CreateView):
+class CreateReading(SuccessMessageMixin, CreateView):
     model = Reading
     fields = ['systolic', 'diastolic', 'timestamp', 'AMPM']
     success_url = '/'
     template_name = 'bp/create_reading.html'
+
+    def get_success_message(self, cleaned_data):
+        date = cleaned_data['timestamp']
+        formatted_date = formats.date_format(date, "m/d/Y")
+        return f'Added {formatted_date} - {cleaned_data["AMPM"]} - ({cleaned_data["systolic"]})/{cleaned_data["diastolic"]}'
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         # Replace an entire widget
         form.fields["timestamp"].widget = forms.DateInput(attrs={"type": "date"})
         return form
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['last10'] = Reading.objects.all().order_by('-timestamp')[:10]
+        return context
+
+    def form_valid(self, form):
+        try:
+            return super().form_valid(form)
+        except IntegrityError:
+            form.add_error(None, "An entry for this date and time already exists.")
+            return self.form_invalid(form)
 
 class ListReadings(ListView):
     model = Reading

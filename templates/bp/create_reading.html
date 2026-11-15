@@ -2,11 +2,38 @@
 
 
 {% block content %}
-
+    {% if messages %}
+  <div class="messages">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}" role="alert">
+        {{ message }}
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
 {%  load crispy_forms_tags %}
+
     <form method="post">
     {% csrf_token %}
         {{ form|crispy }}
     <button type="submit" class="btn btn-primary">Submit</button>
     </form>
+
+    <p class="pt-4">Last 10 readings</p>
+    <table class="table">
+    <thead>
+            <tr>
+                <th>Date</th>
+                <th>AM / PM</th>
+                <th>Reading</th>
+            </tr>
+    </thead>
+    {% for reading in last10 %}
+        <tr>
+            <td>{{ reading.timestamp|date:"m/d/Y" }}</td>
+            <td>{{ reading.AMPM }}</td>
+            <td>{{ reading.systolic }}/{{ reading.diastolic }}</td>
+        </tr>
+    {% endfor %}
+    </table>
 {% endblock %}
