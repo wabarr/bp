@@ -1,5 +1,5 @@
 from django.db import models
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.utils import timezone
 
 class Reading(models.Model):
@@ -11,10 +11,13 @@ class Reading(models.Model):
     def __str__(self):
         return f'{self.systolic}/{self.diastolic} @ {self.timestamp}'
 
-    #def save(self, *args, **kwargs):
-    #    local_dt = timezone.localtime(self.timestamp)
-    #    self.AMPM = local_dt.strftime('%p')
-    #    super().save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        local_dt = timezone.localtime(self.timestamp)
+        if self.AMPM == "AM":
+            self.timestamp = local_dt + timedelta(hours=8)
+        if self.AMPM == "PM":
+            self.timestamp = local_dt + timedelta(hours=17)
+        super().save(*args, **kwargs)
 
 class Annotations(models.Model):
     annotation = models.TextField()
