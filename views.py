@@ -10,6 +10,7 @@ from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
 import json
 from django.http import HttpResponse
+from django import forms
 #note we need the method_decorator to use login_not_required decorator with class based views
 from django.utils.decorators import method_decorator
 
@@ -18,6 +19,12 @@ class CreateReading(CreateView):
     fields = ['systolic', 'diastolic', 'timestamp', 'AMPM']
     success_url = '/'
     template_name = 'bp/create_reading.html'
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        # Replace an entire widget
+        form.fields["timestamp"].widget = forms.DateInput(attrs={"type": "date"})
+        return form
 
 class ListReadings(ListView):
     model = Reading
