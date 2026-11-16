@@ -30,3 +30,7 @@ class Reading(models.Model):
 class Annotations(models.Model):
     annotation = models.TextField()
     timestamp = models.DateTimeField(default=datetime.now)
+
+    class Meta:
+        verbose_name = "Annotation"
+        verbose_name_plural = "Annotations"
