@@ -29,6 +29,14 @@
     </table>
     </div>
     </div>
+     {% if annotations %}
+            <div class="row">
+            <h3>Notes</h3>
+            {% for annotation in annotations %}
+                <p>{{ annotation.timestamp|date:"m/d/Y" }} - {{ annotation.annotation }}</p>
+            {% endfor %}
+            </div>
+        {% endif %}
 {% endblock %}
 
 {% block extrascript %}

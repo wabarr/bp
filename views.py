@@ -1,5 +1,5 @@
 from django.http import HttpResponseRedirect
-from bp.models import Reading
+from bp.models import Reading, Annotations
 from django.core.exceptions import ObjectDoesNotExist
 from ipware import get_client_ip
 from django.views.generic.edit import CreateView
@@ -49,8 +49,18 @@ class ListReadings(ListView):
     context_object_name = 'readings'
     template_name = 'bp/readings_list.html'
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['annotations'] = Annotations.objects.all()
+        return context
+
 class ChartView(TemplateView):
     template_name = 'bp/chart.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['annotations'] = Annotations.objects.all()
+        return context
 
 def json_view(request):
     data = json.dumps(list(Reading.objects.values("diastolic", "systolic", "AMPM", "timestamp")), default=str)
