@@ -5,21 +5,23 @@ from ipware import get_client_ip
 from django.views.generic.edit import CreateView
 from django.views.generic import ListView, TemplateView
 from django.shortcuts import redirect, render
-from django.contrib.auth.decorators import login_not_required
+from django.contrib.auth.decorators import login_not_required, permission_required
 from django.contrib.auth import login
 from django.contrib.auth.forms import AuthenticationForm
 import json
 from django.http import HttpResponse
 from django import forms
 from django.contrib.messages.views import SuccessMessageMixin
+from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.utils import formats
 from django.db import IntegrityError
 
-class CreateReading(SuccessMessageMixin, CreateView):
+class CreateReading(PermissionRequiredMixin, SuccessMessageMixin, CreateView):
     model = Reading
     fields = ['systolic', 'diastolic', 'timestamp', 'AMPM']
     success_url = '/'
     template_name = 'bp/create_reading.html'
+    permission_required = 'bp.add_reading'
 
     def get_success_message(self, cleaned_data):
         date = cleaned_data['timestamp']
@@ -44,24 +46,27 @@ class CreateReading(SuccessMessageMixin, CreateView):
             form.add_error(None, "An entry for this date and time already exists.")
             return self.form_invalid(form)
 
-class ListReadings(ListView):
+class ListReadings(PermissionRequiredMixin, ListView):
     model = Reading
     context_object_name = 'readings'
     template_name = 'bp/readings_list.html'
+    permission_required = 'bp.view_reading'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['annotations'] = Annotations.objects.all()
         return context
 
-class ChartView(TemplateView):
+class ChartView(PermissionRequiredMixin, TemplateView):
     template_name = 'bp/chart.html'
+    permission_required = 'bp.view_reading'
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['annotations'] = Annotations.objects.all()
         return context
 
+@permission_required('bp.view_reading')
 def json_view(request):
     data = json.dumps(list(Reading.objects.values("diastolic", "systolic", "AMPM", "timestamp")), default=str)
     return HttpResponse(data, content_type="application/json")
